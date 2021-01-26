@@ -1,5 +1,5 @@
 extern crate odbc;
-// Use this crate and set environmet variable RUST_LOG=odbc to see ODBC warnings
+// Use this crate and set environment variable RUST_LOG=odbc to see ODBC warnings
 extern crate env_logger;
 use odbc::safe::AutocommitOff;
 use odbc::DiagnosticRecord;
