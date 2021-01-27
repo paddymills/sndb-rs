@@ -1,9 +1,16 @@
 
 use sqlx::mssql::MssqlConnectOptions;
-use sqlx::{Row, ConnectOptions};
+use sqlx::{ConnectOptions};
 
 // required for `try_next`
 use futures::TryStreamExt;
+
+#[derive(sqlx::FromRow)]
+#[sqlx(rename_all = "PascalCase")]
+struct Plate {
+    sheet_name: String,
+    heat_number: String,
+}
 
 #[async_std::main]
 async fn main() -> Result<(), sqlx::Error> {
@@ -17,7 +24,7 @@ async fn main() -> Result<(), sqlx::Error> {
         .connect()
         .await?;
 
-    let mut rows = sqlx::query("
+    let mut rows = sqlx::query_as::<_, Plate>("
     SELECT * FROM Stock
     WHERE SheetName LIKE @P1
     AND HeatNumber LIKE @P2
@@ -28,10 +35,10 @@ async fn main() -> Result<(), sqlx::Error> {
     
 
     while let Some(row) = rows.try_next().await? {
-        let sheet: String = row.try_get("SheetName")?;
-        let heat: String = row.try_get("HeatNumber")?;
+        // let sheet: String = row.try_get("SheetName")?;
+        // let heat: String = row.try_get("HeatNumber")?;
 
-        println!("{} :: {}", sheet, heat);
+        println!("{} :: {}", row.sheet_name, row.heat_number);
     }
 
     Ok(())

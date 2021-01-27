@@ -10,3 +10,6 @@ edition = "2018"
 sqlx = { version = "0.4.2", features = [ "mssql", "runtime-async-std-native-tls" ] }
 async-std = { version = "1.9.0", features = [ "attributes"] }
 futures = { version = "0.3.12" }
+
+[target.'cfg(windows)'.build-dependencies]
+winres = "0.1.11"
