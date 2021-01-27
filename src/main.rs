@@ -1,66 +1,37 @@
-extern crate odbc;
-// Use this crate and set environment variable RUST_LOG=odbc to see ODBC warnings
-extern crate env_logger;
-use odbc::safe::AutocommitOff;
-use odbc::DiagnosticRecord;
-use odbc::ResultSetState::{Data, NoData};
-use odbc::{Connection, Environment, Statement};
 
-use std::env;
-use std::result::Result;
+use sqlx::mssql::MssqlConnectOptions;
+use sqlx::{Row, ConnectOptions};
 
-fn main() {
-    env_logger::init();
+// required for `try_next`
+use futures::TryStreamExt;
 
-    let env = Environment::new().map_err(|e| e.unwrap()).unwrap();
+#[async_std::main]
+async fn main() -> Result<(), sqlx::Error> {
+    // let sql_text = "SELECT * FROM Stock WHERE SheetName LIKE ?";
 
-    let cs = build_conn_str(&"HIIWINBL5", &"SNDBaseDev").unwrap();
+    let mut conn = MssqlConnectOptions::new()
+        .host("HIIWINBL5")
+        .database("SNDBaseDev")
+        .username("SNUser")
+        .password("BestNest1445")
+        .connect()
+        .await?;
 
-    let mut conn = env
-        .connect_with_connection_string(cs.as_str())
-        .unwrap()
-        .disable_autocommit()
-        .unwrap();
+    let mut rows = sqlx::query("
+    SELECT * FROM Stock
+    WHERE SheetName LIKE @P1
+    AND HeatNumber LIKE @P2
+    ")
+        .bind(&"S0018%")
+        .bind(&"D%")
+        .fetch(&mut conn);
+    
 
-    match execute_statement(&conn) {
-        Ok(()) => println!("Success"),
-        Err(diag) => println!("Error: {:?}", diag),
-    }
+    while let Some(row) = rows.try_next().await? {
+        let sheet: String = row.try_get("SheetName")?;
+        let heat: String = row.try_get("HeatNumber")?;
 
-    let _ = conn.rollback();
-}
-
-fn build_conn_str(server: &str, db: &str) -> Result<String, env::VarError> {
-    let user = env::var("SNDB_USER").unwrap();
-    let pass = env::var("SNDB_PWD").unwrap();
-
-    Ok(format!(
-        "DRIVER={{ODBC Driver 17 for SQL Server}};SERVER={};UID={};PWD={};DATABASE={};",
-        server, user, pass, db
-    ))
-}
-
-fn execute_statement<'env>(conn: &Connection<'env, AutocommitOff>) -> Result<(), DiagnosticRecord> {
-    let sql_text = "SELECT SheetName, HeatNumber FROM SNDBaseDev.dbo.Stock WHERE SheetName LIKE ?";
-
-    let stmt = Statement::with_parent(conn)?
-        .prepare(&sql_text)?
-        .bind_parameter(1, &"S0018%")?;
-
-    match stmt.execute()? {
-        Data(mut stmt) => {
-            let cols = stmt.num_result_cols()?;
-            while let Some(mut cursor) = stmt.fetch()? {
-                for i in 1..(cols + 1) {
-                    match cursor.get_data::<&str>(i as u16)? {
-                        Some(val) => print!(" {}", val),
-                        None => print!(" NULL"),
-                    }
-                }
-                println!("");
-            }
-        }
-        NoData(_) => println!("Query executed, no data returned"),
+        println!("{} :: {}", sheet, heat);
     }
 
     Ok(())
