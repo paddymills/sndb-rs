@@ -2,44 +2,57 @@
 use sqlx::mssql::MssqlConnectOptions;
 use sqlx::{ConnectOptions};
 
+use std::io::{self, Write};
+use std::fs;
+
 // required for `try_next`
 use futures::TryStreamExt;
 
-#[derive(sqlx::FromRow)]
-#[sqlx(rename_all = "PascalCase")]
-struct Plate {
-    sheet_name: String,
-    heat_number: String,
-}
+mod schema;
 
 #[async_std::main]
 async fn main() -> Result<(), sqlx::Error> {
-    // let sql_text = "SELECT * FROM Stock WHERE SheetName LIKE ?";
 
     let mut conn = MssqlConnectOptions::new()
-        .host("HIIWINBL5")
-        .database("SNDBaseDev")
+        .host("HIIWINBL18")
         .username("SNUser")
         .password("BestNest1445")
         .connect()
         .await?;
+        
+    let query = get_query_from_file("sql/program_status.sql")?;
 
-    let mut rows = sqlx::query_as::<_, Plate>("
-    SELECT * FROM Stock
-    WHERE SheetName LIKE @P1
-    AND HeatNumber LIKE @P2
-    ")
-        .bind(&"S0018%")
-        .bind(&"D%")
-        .fetch(&mut conn);
+    while let Some(input) = get_user_input() {
     
-
-    while let Some(row) = rows.try_next().await? {
-        // let sheet: String = row.try_get("SheetName")?;
-        // let heat: String = row.try_get("HeatNumber")?;
-
-        println!("{} :: {}", row.sheet_name, row.heat_number);
+        let mut rows = sqlx::query_as::<_, schema::Status>(query.as_str())
+            .bind(input)
+            .fetch(&mut conn);
+    
+        while let Some(row) = rows.try_next().await? {
+            println!("{:?}", row);
+        }
     }
 
     Ok(())
+}
+
+fn get_query_from_file(file_name: &str) -> Result<String, io::Error> {
+    let sql_query = fs::read_to_string(file_name)
+        .expect("Could not read query file");
+
+    Ok(sql_query)
+}
+
+fn get_user_input<>() -> Option<String> {
+    let mut input = String::new();
+    
+    print!("Program: ");
+    io::stdout().flush().unwrap();
+
+    io::stdin().read_line(&mut input).unwrap();
+
+    match input.trim() {
+        "" => None, // ends input loop
+        x => Some(String::from(x))
+    }
 }
