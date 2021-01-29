@@ -1,7 +1,7 @@
 USE SNDBase91;
 
 SELECT
-    ArcDateTime,
+    CONVERT(nvarchar, ArcDateTime, 120) AS ArcDateTime,
     ProgramName,
     SheetName,
     TransType
