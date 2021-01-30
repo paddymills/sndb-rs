@@ -11,7 +11,7 @@ use futures::TryStreamExt;
 mod schema;
 
 #[async_std::main]
-#[allow(unused_variables)]
+#[allow(unused_variables, unused_assignments)]
 async fn main() -> Result<(), sqlx::Error> {
     // create connection
     let mut conn = MssqlConnectOptions::new()
@@ -34,30 +34,41 @@ async fn main() -> Result<(), sqlx::Error> {
             .bind(input)
             .fetch(&mut conn);
 
+        let mut prev_timestamp: Option<String> = None;
         while let Some(row) = rows.try_next().await? {
             // iterates through rows by timestamps in descending order
             // posting (SN100) and updating (SN102) terminate the loop
             // deleting (SN101) will contiue the loop because it can be a re-posting or a delete
             // (re-posting a program sends a SN101 and a SN100, however they do not always go in order)
 
-            // match row.trans_type {
-            //     "SN100" => { // program posted
-            //         println!("Program {} is still active", row.program_name);
+            match row.trans_type.as_str() {
+                "SN100" => { // program posted
+                    match prev_timestamp {
+                        // previous row was an SN101 and the timestamps do not match (not a repost)
+                        Some(ref ts)
+                            if row.timestamp().as_str() != ts.as_str()
+                                => println!("Program {} was deleted on {}", row.program_name, ts),
 
-            //         break;
-            //     },
-            //     "SN101" => { // program deleted
-            //         println!("Got program deletion.");
-            //     },
-            //     "SN102" => { // program updated
-            //         println!("Updated: {:}", row);
+                        // else:
+                        //  either first row (program last posted)
+                        //  or previous line was an SN101 and the timestamps match
+                        _ => println!("Program {} is still active", row.program_name),
+                    };
 
-            //         break;
-            //     },
-            //     _ => unreachable!(),
-            // };
+                    break;
+                },
+                "SN101" => { // program deleted
+                    prev_timestamp = Some(row.timestamp());
+                },
+                "SN102" => { // program updated
+                    // TODO: fetch sheet and operator data
 
-            println!("{:}", row);
+                    println!("Updated: {:}", row);
+
+                    break;
+                },
+                _ => unreachable!(),
+            };
         }
     }
 
