@@ -1,6 +1,7 @@
 
 pub mod schema;
 pub mod printer;
+pub mod config;
 
 use std::io::{self, Write};
 use std::fs;
@@ -14,7 +15,7 @@ pub fn get_query_from_file(file_name: &str) -> Result<String, io::Error> {
 }
 
 #[allow(dead_code)]
-pub fn get_user_input<>(prompt: &str) -> Option<String> {
+pub fn get_user_input(prompt: &str) -> Option<String> {
     let mut input = String::new();
     
     print!("{}", prompt);

@@ -8,18 +8,21 @@ use prettytable::Cell;
 // required for `try_next`
 use futures::TryStreamExt;
 
-use sndb::{schema, get_query_from_file};
+use sndb::*;
 use sndb::printer::ResultPrinter;
 
 #[async_std::main]
 #[allow(unused_variables, unused_assignments)]
 async fn main() -> Result<(), sqlx::Error> {
+    // read config
+    let cfg = config::DbConfig::from("db.toml");
+
     // create connection
     let db_cfg = MssqlConnectOptions::new()
-        .host("HIIWINBL18")
-        .database("SNDBase91")
-        .username("SNUser")
-        .password("BestNest1445");
+        .host(&cfg.host)
+        .database(&cfg.db)
+        .username(&cfg.user)
+        .password(&cfg.password);
     
     let pool = MssqlPool::connect_lazy_with(db_cfg);
         
