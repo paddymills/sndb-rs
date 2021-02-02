@@ -1,5 +1,3 @@
-USE SNDBase91;
-
 SELECT
     SheetName,
     PrimeCode,

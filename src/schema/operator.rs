@@ -8,7 +8,7 @@ pub struct Operator {
     timestamp: String,
 
     #[sqlx(rename = "OperatorName")]
-    name: String,
+    pub name: String,
 }
 
 impl fmt::Display for Operator {

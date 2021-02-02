@@ -1,5 +1,6 @@
 
 use std::fmt;
+
 use chrono::NaiveDateTime;
 
 #[derive(Debug, Default, sqlx::FromRow)]

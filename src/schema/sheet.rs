@@ -4,14 +4,14 @@ use std::fmt;
 #[derive(Debug, sqlx::FromRow)]
 #[sqlx(rename_all = "PascalCase")]
 pub struct Sheet {
-    sheet_name: String,
-    heat_number: String,
+    pub sheet_name: String,
+    pub heat_number: String,
 
     #[sqlx(rename = "PrimeCode")]
-    material_master: String,
+    pub material_master: String,
 
     #[sqlx(rename = "BinNumber")]
-    po_number: String,
+    pub po_number: String,
 }
 
 impl fmt::Display for Sheet {

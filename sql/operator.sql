@@ -1,5 +1,3 @@
-USE OYSProgramUpdate;
-
 SELECT
     CONVERT(nvarchar, CompletedDateTime, 120) AS CompletedDateTime,
     OperatorName

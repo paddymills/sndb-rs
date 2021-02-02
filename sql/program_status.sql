@@ -1,5 +1,3 @@
-USE SNDBase91;
-
 SELECT
     CONVERT(nvarchar, ArcDateTime, 120) AS ArcDateTime,
     ProgramName,
