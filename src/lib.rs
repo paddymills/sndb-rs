@@ -25,6 +25,6 @@ pub fn get_user_input(prompt: &str) -> Option<String> {
 
     match input.trim() {
         "" => None, // ends input loop
-        x => Some(String::from(x))
+        x => Some(x.to_string())
     }
 }

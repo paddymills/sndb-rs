@@ -1,9 +1,7 @@
 
-
-#[allow(unused_imports)]
 use sqlx::mssql::{MssqlConnectOptions, MssqlPool};
 
-use prettytable::Cell;
+use prettytable::{Row, Cell};
 
 // required for `try_next`
 use futures::TryStreamExt;
@@ -34,23 +32,29 @@ async fn main() -> Result<(), sqlx::Error> {
     let header = vec!["Program", "Status", "Timestamp", "SAP MM", "Heat Number", "PO Number", "Operator"];
     let mut term = ResultPrinter::new(header);
 
-    // while let Some(input) = get_user_input("Program: ") {
-    {
-        let input = "46064";
+
+    let mut program = String::from("00000");
+    while let Some(input) = get_user_input("\nProgram: ") {
+        term.printed_rows += 2;
+        
+        match 5 - input.len() {
+            x if x < 5 => program.replace_range(x.., &input),
+            _ => program = String::from(input),
+        }
+        
         let mut rows = sqlx::query_as::<_, schema::Status>(&get_status)
-            .bind(input)
+            .bind(&program)
             .fetch(&pool);
-
+        
         let mut prev_timestamp: Option<String> = None;
-        let table_row = term.table.add_empty_row();
-
+        let mut table_row = Row::new(Vec::new());
         while let Some(row) = rows.try_next().await? {
             // iterates through rows by timestamps in descending order
             // posting (SN100) and updating (SN102) terminate the loop
             // deleting (SN101) will contiue the loop because it can be a re-posting or a delete
             // (re-posting a program sends a SN101 and a SN100, however they do not always go in order)
-
-            if table_row.len() == 0 {
+            
+            if table_row.is_empty() {
                 table_row.add_cell(Cell::new(&row.program_name));
             }
 
@@ -117,9 +121,19 @@ async fn main() -> Result<(), sqlx::Error> {
                     break;
                 },
                 _ => unreachable!(),
-            };
+            }
         }
 
+        // input returned no results
+        if table_row.is_empty() {
+            table_row.add_cell(Cell::new(&program));
+            table_row.add_cell(Cell::new("Not found"));         
+        }
+
+        // add row to table
+        term.table.add_row(table_row);
+        
+        // print table
         term.print_table().unwrap();
     }
 

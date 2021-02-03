@@ -1,5 +1,5 @@
 
-use std::fs;
+use std::{fs, fmt};
 
 use serde::{Serialize, Deserialize};
 use toml;
@@ -55,5 +55,11 @@ impl Default for DbConfig {
             user: String::new(),
             password: String::new()
         }
+    }
+}
+
+impl fmt::Display for DbConfig {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{} :: {} :: {} :: {}", self.host, self.db, self.user, self.password)
     }
 }
