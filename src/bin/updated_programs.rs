@@ -23,11 +23,6 @@ async fn main() -> Result<(), sqlx::Error> {
         .password(&cfg.password);
     
     let pool = MssqlPool::connect_lazy_with(db_cfg);
-        
-    // preload queries
-    let get_status = get_query_from_file("sql/program_status.sql")?;
-    let get_sheet = get_query_from_file("sql/sheet.sql")?;
-    let get_operator = get_query_from_file("sql/operator.sql")?;
 
     let header = vec!["Program", "Status", "Timestamp", "SAP MM", "Heat Number", "PO Number", "Operator"];
     let mut term = ResultPrinter::new(header);
@@ -42,7 +37,7 @@ async fn main() -> Result<(), sqlx::Error> {
             _ => program = String::from(input),
         }
         
-        let mut rows = sqlx::query_as::<_, schema::Status>(&get_status)
+        let mut rows = sqlx::query_as::<_, schema::Status>(schema::queries::PROGRAM_STATUS)
             .bind(&program)
             .fetch(&pool);
         
@@ -96,7 +91,7 @@ async fn main() -> Result<(), sqlx::Error> {
                     table_row.add_cell(Cell::new(&row.timestamp()));
 
                     // get sheet data
-                    let sheet = sqlx::query_as::<_, schema::Sheet>(&get_sheet)
+                    let sheet = sqlx::query_as::<_, schema::Sheet>(schema::queries::SHEET)
                         .bind(&row.program_name)
                         .bind(&row.sheet_name)
                         .fetch_one(&pool)
@@ -107,7 +102,7 @@ async fn main() -> Result<(), sqlx::Error> {
                     table_row.add_cell(Cell::new(&sheet.po_number));
                     
                     // get operator
-                    let operator = match sqlx::query_as::<_, schema::Operator>(&get_operator)
+                    let operator = match sqlx::query_as::<_, schema::Operator>(schema::queries::OPERATOR)
                         .bind(&row.program_name)
                         .bind(&row.sheet_name)
                         .fetch_one(&pool)
