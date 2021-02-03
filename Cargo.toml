@@ -1,5 +1,5 @@
 [package]
-name = "sndb-rs"
+name = "sndb"
 version = "0.1.0"
 authors = ["paddymills <paddymills@pm.me>"]
 edition = "2018"
@@ -7,5 +7,22 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-env_logger = "0.7.1"
-odbc = "0.17.0"
+futures = "0.3.12"
+toml = "0.5.8"
+serde = "^1.0"
+chrono = "0.4.19"
+prettytable-rs = "0.8.0"
+winapi = "0.3.9"
+crossterm = "0.19.0"
+
+[dependencies.sqlx]
+version = "0.4.2"
+# path = "../sqlx"
+features = [ "mssql", "runtime-async-std-native-tls" ]
+
+[dependencies.async-std]
+version = "1.9.0"
+features = [ "attributes" ]
+
+[target.'cfg(windows)'.build-dependencies]
+winres = "0.1.11"
