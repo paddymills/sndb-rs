@@ -79,7 +79,16 @@ async fn main() -> Result<(), sqlx::Error> {
                     break;
                 },
                 "SN101" => { // program deleted
-                    prev_timestamp = Some(row.timestamp());
+                    match prev_timestamp {
+                        Some(ref ts) => {
+                            // previous row was another 101
+                            table_row.add_cell(Cell::new("Deleted"));
+                            table_row.add_cell(Cell::new(ts));
+
+                            break;
+                        },
+                        None => prev_timestamp = Some(String::from(row.timestamp()))
+                    }
 
                     // next iteration checks if timestamps match
                     //  to determine if this is a repost or delete
