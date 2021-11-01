@@ -17,11 +17,18 @@ pub struct DbConfig {
 impl DbConfig {
     pub fn new() -> Self {
 
-        let host = get_user_input("Host: ").unwrap();
-        let db = get_user_input("Database: ").unwrap();
-        let user = get_user_input("User: ").unwrap();
-        let password = get_user_input("Password: ").unwrap();
+        let env_or_user_input = |var, prompt| -> String {
+            match std::env::var(var) {
+                Ok(val) => val,
+                Err(_) => get_user_input(format!("SigmaNest Database {}: ", prompt).as_str()).unwrap(),
+            }
+        };
         
+        let host = env_or_user_input("SNDB_HOST", "Host");
+        let db = env_or_user_input("SNDB_DB", "Database");
+        let user = env_or_user_input("SNDB_USER", "User");
+        let password = env_or_user_input("SNDB_PWD", "Password");
+
         Self { host, db, user, password }
     }
 
