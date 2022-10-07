@@ -27,5 +27,5 @@ features = [ "attributes" ]
 [target.'cfg(windows)'.build-dependencies]
 winres = "0.1.11"
 
-[patch.crates-io]
-lexical-core = {git = 'https://github.com/Gelbpunkt/rust-lexical', branch = 'fix-warnings-and-update-deps'}
+[[bin]]
+name = "updated_programs"

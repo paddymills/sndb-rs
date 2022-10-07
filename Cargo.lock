@@ -1861,8 +1861,3 @@ checksum = "ff4fb510bbfe5b8992ff15f77a2e6fe6cf062878f0eda00c0f44963a807ca5dc"
 dependencies = [
  "toml",
 ]
-
-[[patch.unused]]
-name = "lexical-core"
-version = "0.7.4"
-source = "git+https://github.com/Gelbpunkt/rust-lexical?branch=fix-warnings-and-update-deps#601c9bfe16c944948d4c4a07e3c67878d72f6445"
